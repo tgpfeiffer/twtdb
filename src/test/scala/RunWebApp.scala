@@ -6,7 +6,7 @@ import org.eclipse.jetty.webapp.WebAppContext
 object RunWebApp extends App {
   val server = new Server
   val scc = new SelectChannelConnector
-  scc.setPort(8080)
+  scc.setPort(8083)
   server.setConnectors(Array(scc))
 
   val context = new WebAppContext()
