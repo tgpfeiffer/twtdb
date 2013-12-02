@@ -1,6 +1,6 @@
-name := "Lift v2.6 Template Application with Bootstrap v3"
+name := "twtdb - A Twitter Dashboard"
 
-version := "0.0.3"
+version := "0.0.1"
 
 organization := "net.liftweb"
 
