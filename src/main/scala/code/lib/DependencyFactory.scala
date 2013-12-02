@@ -4,8 +4,6 @@ package lib
 import net.liftweb._
 import http._
 import util._
-import common._
-import java.util.Date
 
 /**
  * A factory for generating new instances of Date.  You can create
@@ -15,6 +13,7 @@ import java.util.Date
  * stack basis.
  */
 object DependencyFactory extends Factory {
+
   implicit object time extends FactoryMaker(Helpers.now _)
 
   /**
@@ -26,6 +25,7 @@ object DependencyFactory extends Factory {
   private def init() {
     List(time)
   }
+
   init()
 }
 

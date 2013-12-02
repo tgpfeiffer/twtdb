@@ -22,11 +22,11 @@ import scala.language.postfixOps
 class Boot {
   def boot {
     if (!DB.jndiJdbcConnAvailable_?) {
-      val vendor = 
-	new StandardDBVendor(Props.get("db.driver") openOr "org.h2.Driver",
-			     Props.get("db.url") openOr 
-			     "jdbc:h2:lift_proto.db;AUTO_SERVER=TRUE",
-			     Props.get("db.user"), Props.get("db.password"))
+      val vendor =
+        new StandardDBVendor(Props.get("db.driver") openOr "org.h2.Driver",
+          Props.get("db.url") openOr
+            "jdbc:h2:lift_proto.db;AUTO_SERVER=TRUE",
+          Props.get("db.user"), Props.get("db.password"))
 
       LiftRules.unloadHooks.append(vendor.closeAllConnections_! _)
 
@@ -48,14 +48,14 @@ class Boot {
 
     //Init the FoBo - Front-End Toolkit module, 
     //see http://liftweb.net/lift_modules for more info
-    FoBo.InitParam.JQuery=FoBo.JQuery1102  
-    FoBo.InitParam.ToolKit=FoBo.Bootstrap301 
-    FoBo.init() 
-    
+    FoBo.InitParam.JQuery = FoBo.JQuery1102
+    FoBo.InitParam.ToolKit = FoBo.Bootstrap301
+    FoBo.init()
+
     //Show the spinny image when an Ajax call starts
     LiftRules.ajaxStart =
       Full(() => LiftRules.jsArtifacts.show("ajax-loader").cmd)
-    
+
     // Make the spinny image go away when it ends
     LiftRules.ajaxEnd =
       Full(() => LiftRules.jsArtifacts.hide("ajax-loader").cmd)
@@ -68,37 +68,38 @@ class Boot {
 
     // Use HTML5 for rendering
     LiftRules.htmlProperties.default.set((r: Req) =>
-      new Html5Properties(r.userAgent))    
-      
-    LiftRules.noticesAutoFadeOut.default.set( (notices: NoticeType.Value) => {
-        notices match {
-          case NoticeType.Notice => Full((8 seconds, 4 seconds))
-          case _ => Empty
-        }
-     }
-    ) 
-    
+      new Html5Properties(r.userAgent))
+
+    LiftRules.noticesAutoFadeOut.default.set((notices: NoticeType.Value) => {
+      notices match {
+        case NoticeType.Notice => Full((8 seconds, 4 seconds))
+        case _ => Empty
+      }
+    }
+    )
+
     // Make a transaction span the whole HTTP request
     S.addAround(DB.buildLoanWrapper)
   }
-  
+
   object Site {
-    import scala.xml._
-    val divider1   = Menu("divider1") / "divider1"
-    val ddLabel1   = Menu.i("UserDDLabel") / "ddlabel1"
-    val home       = Menu.i("Home") / "index" 
-    val userMenu   = User.AddUserMenusHere
-    val static     = Menu(Loc("Static", Link(List("static"), true, "/static/index"), S.loc("StaticContent" , scala.xml.Text("Static Content")),LocGroup("lg2","topRight")))
-    val twbs       = Menu(Loc("Bootstrap3", Link(List("bootstrap301"), true, "/bootstrap301/index"), S.loc("Bootstrap3" , scala.xml.Text("Bootstrap3")),LocGroup("lg2")))
-     
+
+
+    val divider1 = Menu("divider1") / "divider1"
+    val ddLabel1 = Menu.i("UserDDLabel") / "ddlabel1"
+    val home = Menu.i("Home") / "index"
+    val userMenu = User.AddUserMenusHere
+    val static = Menu(Loc("Static", Link(List("static"), true, "/static/index"), S.loc("StaticContent", scala.xml.Text("Static Content")), LocGroup("lg2", "topRight")))
+    val twbs = Menu(Loc("Bootstrap3", Link(List("bootstrap301"), true, "/bootstrap301/index"), S.loc("Bootstrap3", scala.xml.Text("Bootstrap3")), LocGroup("lg2")))
+
     def sitemap = SiteMap(
-        home          >> LocGroup("lg1"),
-        static,
-        twbs,
-        ddLabel1      >> LocGroup("topRight") >> PlaceHolder submenus (
-            divider1  >> FoBo.TBLocInfo.Divider >> userMenu
-            )
-         )
+      home >> LocGroup("lg1"),
+      static,
+      twbs,
+      ddLabel1 >> LocGroup("topRight") >> PlaceHolder submenus (
+        divider1 >> FoBo.TBLocInfo.Divider >> userMenu
+        )
+    )
   }
-  
+
 }
