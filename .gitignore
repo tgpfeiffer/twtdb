@@ -56,3 +56,6 @@ lift_proto*
 # Pax Runner (for easy OSGi launching)
 runner
 
+# configs (may contain private keys)
+src/main/resources/props/*.props
+src/test/resources/props/*.props
