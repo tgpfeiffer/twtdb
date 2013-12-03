@@ -1,4 +1,4 @@
-package code
+package net.nablux.twtdb
 package snippet
 
 import net.liftweb._

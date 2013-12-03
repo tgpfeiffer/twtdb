@@ -1,4 +1,4 @@
-package code
+package net.nablux.twtdb
 package model
 
 import net.liftweb.mapper._

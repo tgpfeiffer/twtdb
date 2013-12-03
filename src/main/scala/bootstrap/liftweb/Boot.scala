@@ -10,7 +10,7 @@ import sitemap._
 import Loc._
 import mapper._
 
-import code.model._
+import net.nablux.twtdb.model._
 import net.liftmodules.FoBo
 
 import scala.language.postfixOps
@@ -39,7 +39,7 @@ class Boot {
     Schemifier.schemify(true, Schemifier.infoF _, User)
 
     // where to search snippet
-    LiftRules.addToPackages("code")
+    LiftRules.addToPackages("net.nablux.twtdb")
 
 
     def sitemapMutators = User.sitemapMutator

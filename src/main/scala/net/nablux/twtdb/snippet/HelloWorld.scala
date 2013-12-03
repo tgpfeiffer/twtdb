@@ -1,10 +1,10 @@
-package code
+package net.nablux.twtdb
 package snippet
 
 import net.liftweb.util._
 import net.liftweb.common._
 import java.util.Date
-import code.lib._
+import net.nablux.twtdb.lib._
 import Helpers._
 
 class HelloWorld {
