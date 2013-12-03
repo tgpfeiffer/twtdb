@@ -32,6 +32,7 @@ libraryDependencies ++= {
     // see <http://code.google.com/p/selenium/issues/detail?id=6432>
     "org.seleniumhq.selenium" % "selenium-java" % "2.37.0"           % "test",
     "org.apache.httpcomponents" % "httpclient" % "4.3.1",
+    "net.databinder.dispatch" %% "dispatch-core" % "0.11.0",
     "com.h2database"    % "h2"                  % "1.3.167"
   )
 }
