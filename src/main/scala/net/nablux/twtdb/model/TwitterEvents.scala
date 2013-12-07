@@ -79,3 +79,8 @@ case class DeleteTweet(delete: Delete) extends TwitterEvent
 case class Delete(status: DeleteStatus)
 
 case class DeleteStatus(id: Long, user_id: Long)
+
+// New tweets from the user, cf.
+// <https://dev.twitter.com/docs/api/1.1/post/statuses/update>
+
+case class NewTweet(status: String)

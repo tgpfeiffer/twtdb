@@ -10,6 +10,7 @@ import net.liftweb.http._
 import net.liftweb.http.rest._
 import bootstrap.liftweb.Site
 import net.nablux.twtdb.comet.{Logout, Login}
+import net.nablux.twtdb.model.NewTweet
 
 object UserRequestToken extends SessionVar[Box[RequestToken]](Empty)
 
@@ -119,6 +120,31 @@ object OauthHelper
       if UserRequestToken.get.isEmpty => {
       logger.warn("no request token known when returning from Twitter")
       RedirectResponse(Site.home.loc.calcDefaultHref)
+    }
+  }
+
+  /** Posts a new tweet on behalf of the authenticated user. */
+  def postTweet(tweet: NewTweet) = {
+    logger.info("trying to post a new tweet: " + tweet)
+    UserAccessToken.get match {
+      // if we have an access token, post the message
+      case Full(at) => {
+        val req = url(twitterBase) / "1.1" / "statuses" / "update.json" <<
+          Map("status" -> tweet.status)
+        http(req <@(consumer, at) OK as.String).either.map(_ match {
+          case Left(t) =>
+            logger.error("post failed: " + t.getMessage)
+            Left(t.getMessage)
+          case r =>
+            logger.debug("posted successfully")
+            r
+        }).apply
+      }
+      case _ => {
+        val errMsg = "cannot post tweet; no access token"
+        logger.error(errMsg)
+        Left(errMsg)
+      }
     }
   }
 
