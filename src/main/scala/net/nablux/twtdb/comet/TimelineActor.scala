@@ -10,6 +10,7 @@ import com.ning.http.client.oauth.RequestToken
 import net.nablux.twtdb.lib.{StopListening, StartListening, StreamProcessor, UserAccessToken}
 import net.nablux.twtdb.model._
 import scala.collection.mutable.MutableList
+import bootstrap.liftweb.Site
 
 /**
  * Received from OauthHelper to show user has authenticated with Twitter.
@@ -35,19 +36,18 @@ class TimelineActor
   // actor that does the listening
   protected val processor = new StreamProcessor(this)
 
-  UserAccessToken.get.map(this ! Login(_))
-
   // message that is rendered when first displayed
   def render = {
-    "#timeline *" #> {
-      UserAccessToken.get match {
-        case Full(at) =>
-          events.map(renderEvent(_)).foldLeft(NodeSeq.Empty)(_ ++ _)
-        case _ =>
-          Text(S.?("twtdb.please-login"))
+    UserAccessToken.get match {
+      case Full(at) => {
+        "#timeline *" #> events.map(renderEvent(_)).foldLeft(NodeSeq.Empty)(_ ++ _) &
+          "#friendlist *" #> renderEvent(friendList)
       }
-    } &
-      "#friendlist *" #> renderEvent(friendList)
+      case _ => {
+        "#timeline *" #> NodeSeq.Empty &
+          "#friendlist *" #> NodeSeq.Empty
+      }
+    }
   }
 
   // handle some technical events with high priority
@@ -60,6 +60,8 @@ class TimelineActor
     // when the user logs out, tell the StreamProcessor to cancel the request
     case Logout => {
       logger.info("user logged out")
+      events.clear()
+      friendList = Empty
       processor ! StopListening
     }
   }

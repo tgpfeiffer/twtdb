@@ -15,6 +15,7 @@ import net.nablux.twtdb.model._
 import net.liftmodules.FoBo
 
 import scala.language.postfixOps
+import scala.xml.Text
 
 /**
  * A class that's instantiated early and run.  It allows the application
@@ -91,9 +92,10 @@ object Site {
   val divider1 = Menu("divider1") / "divider1"
   val ddLabel1 = Menu.i("UserDDLabel") / "ddlabel1"
   val home = Menu.i("Home") / "index"
-  val oauthLogin = Menu("OauthLogin", S.loc("fobo.menu.loc.login", scala.xml.Text(S.?("login")))) / "oauth_login"
+  val oauthLogin = Menu("OauthLogin", S.loc("fobo.menu.loc.login", scala.xml.Text(S.?("login"))) ++ Text("/") ++
+    S.loc("fobo.menu.loc.logout", scala.xml.Text(S.?("login")))) / "oauth_login"
   val userMenu = User.AddUserMenusHere
-  val static = Menu(Loc("Static", Link(List("static"), true, "/static/index"), S.loc("StaticContent", scala.xml.Text("Static Content")), LocGroup("lg2", "topRight")))
+  val static = Menu(Loc("Static", Link(List("static"), true, "/static/index"), S.loc("StaticContent", scala.xml.Text("Static Content")), Hidden))
   val twbs = Menu(Loc("Bootstrap3", Link(List("bootstrap301"), true, "/bootstrap301/index"), S.loc("Bootstrap3", scala.xml.Text("Bootstrap3")), LocGroup("lg2")))
 
   def sitemap = SiteMap(
