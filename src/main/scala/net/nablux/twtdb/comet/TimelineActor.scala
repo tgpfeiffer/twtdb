@@ -4,7 +4,7 @@ import scala.xml.{NodeSeq, Text}
 import net.liftweb.http._
 import net.liftweb.common.{Empty, Box, Loggable, Full}
 import net.liftweb.http.js.JsCmds.SetHtml
-import net.liftweb.http.js.jquery.JqJsCmds.AppendHtml
+import net.liftweb.http.js.jquery.JqJsCmds.PrependHtml
 import net.liftweb.util.Helpers._
 import com.ning.http.client.oauth.RequestToken
 import net.nablux.twtdb.lib.{StopListening, StartListening, StreamProcessor, UserAccessToken}
@@ -73,12 +73,12 @@ class TimelineActor
           partialUpdate(SetHtml("friendlist", renderEvent(fl)))
         }
         case t: Tweet => {
-          events += t
-          partialUpdate(AppendHtml("timeline", renderEvent(t)))
+          t +=: events
+          partialUpdate(PrependHtml("timeline", renderEvent(t)))
         }
         case dm: DirectMessage => {
-          events += dm
-          partialUpdate(AppendHtml("timeline", renderEvent(dm)))
+          dm +=: events
+          partialUpdate(PrependHtml("timeline", renderEvent(dm)))
         }
         case _: Event | _: TooManyFollowsWarning | _: DeleteTweet => {}
       }

@@ -60,8 +60,7 @@ class StreamProcessor(parent: LiftActor)
             parse(s).extract[List[Tweet]]
           } match {
             case Full(list) => {
-              logger.debug("got " + list.length + " initial tweets")
-              list.map(parent ! _)
+              list.reverse.map(parent ! _)
             }
             case Failure(msg, _, _) =>
               logger.error("failed to extract list of tweets: " + msg +
@@ -134,7 +133,7 @@ class StreamProcessor(parent: LiftActor)
           case Full(obj) =>
             logger.debug("received " + obj)
             parent ! obj
-          case Failure(msg, _, _) =>
+          case Failure(err, _, _) =>
             logger.error("failed to extract class: " + msg)
           case Empty =>
             logger.warn("no handler for JSON:\n" + tryo(compact(render(json))).getOrElse(msg))
