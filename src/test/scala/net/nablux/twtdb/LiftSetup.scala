@@ -20,7 +20,9 @@ trait LiftSetup
   private val runServer = true
   private var server: Server = null
   private val GUI_PORT = 8083
-  protected var host = "http://localhost:" + GUI_PORT.toString
+  // NB. "localhost" instead of "127.0.0.1" will not work since Twitter does
+  //  not accept "localhost" as a valid location for the callback URL
+  protected var host = "http://127.0.0.1:" + GUI_PORT.toString
 
   /** Start the Jetty server. */
   override def beforeAll() {
@@ -42,6 +44,7 @@ trait LiftSetup
       server.start()
     }
     implicitlyWait(Span(2, Seconds))
+    Thread.sleep(1000)
   }
 
   /** Stop the web driver and shut down the Jetty server. */
@@ -55,5 +58,6 @@ trait LiftSetup
       server.stop()
       server.join()
     }
+    Thread.sleep(1000)
   }
 }

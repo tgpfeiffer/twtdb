@@ -15,6 +15,9 @@ seq(com.github.siasia.WebPlugin.webSettings :_*)
 
 unmanagedResourceDirectories in Test <+= (baseDirectory) { _ / "src/main/webapp" }
 
+// for Selenium tests, prefer sequential execution
+parallelExecution in Test := false
+
 scalacOptions ++= Seq("-deprecation", "-unchecked", "-feature")
 
 libraryDependencies ++= {
