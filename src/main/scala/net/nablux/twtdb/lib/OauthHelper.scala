@@ -49,12 +49,13 @@ object OauthHelper
     * NB. Must be used from stateful environment since we use the S object.
     */
   def getRequestTokenAndRedirect = {
+    logger.info("getting request token before redirect to Twitter")
     val tokReq = fetchRequestToken
     tokReq.apply match {
       case Right(rt) =>
         // we got a request token; store it in SessionVar and redirect
         //  to Twitter for user authentication
-        logger.info("got request token: " + rt)
+        logger.debug("got request token: " + rt)
         UserRequestToken.set(Full(rt))
         val target = authorize + "?oauth_token=" + rt.getKey
         S.redirectTo(target)
@@ -75,14 +76,15 @@ object OauthHelper
       S.param("oauth_verifier") match {
         case Full(verifier) =>
           // if we got a verifier as a parameter, get an access token next
-          logger.info("return from Twitter with verifier :" + verifier)
+          logger.debug("return from Twitter with verifier :" + verifier)
           val rt = UserRequestToken.get.get
 
           // get an access token using request token and verifier
+          logger.info("getting access token after redirect from Twitter")
           fetchAccessToken(rt, verifier).apply match {
             case Right(at) =>
               // store in session var and go to front page
-              logger.info("got access token: " + at)
+              logger.debug("got access token: " + at)
               UserAccessToken.set(Full(at))
               // we now send this access token to the TimelineActor so that
               //  it can trigger fetching the stream
@@ -91,6 +93,7 @@ object OauthHelper
                   Empty,
                   Login(at))
               }
+              // redirect to front page
               S.notice(S.?("twtdb.login-success"))
               RedirectResponse(Site.home.loc.calcDefaultHref)
 
@@ -98,6 +101,7 @@ object OauthHelper
               // remove request token as well (something went wrong)
               logger.error("did not receive access token: " + msg)
               UserRequestToken.remove
+              // redirect to front page
               S.error(S.?("twtdb.no-access-token-received"))
               RedirectResponse(Site.home.loc.calcDefaultHref)
           }
