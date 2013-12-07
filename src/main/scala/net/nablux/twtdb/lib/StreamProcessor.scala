@@ -1,12 +1,15 @@
 package net.nablux.twtdb.lib
 
 import net.liftweb.actor.LiftActor
-import net.liftweb.common.{Loggable, Full, Empty, Box}
+import net.liftweb.common._
+import net.liftweb.util.Helpers._
+import net.liftweb.json._
 import dispatch._
 import dispatch.Defaults._
 import dispatch.oauth._
 import com.ning.http.client.oauth.RequestToken
-import net.nablux.twtdb.comet.{StreamRow, TimelineActor}
+import net.nablux.twtdb.comet.TimelineActor
+import net.nablux.twtdb.model.{TwitterEvent, FriendList}
 
 /**
  * Received from TimelineActor to signal we should connect to Twitter stream.
@@ -22,7 +25,7 @@ case class StopListening()
  * Connects to Twitter API, parses events and sends them to TimelineActor.
  * @param parent the CometActor that listens to events from this actor
  */
-class StreamProcessor(parent: TimelineActor)
+class StreamProcessor(parent: LiftActor)
   extends LiftActor
   with Loggable {
 
@@ -41,8 +44,8 @@ class StreamProcessor(parent: TimelineActor)
       token = Full(at)
       // the handler deals with rows in the stream
       val handler = as.stream.Lines(line => {
-        println("got: " + line)
-        parent ! StreamRow(line)
+        logger.debug("got: " + line)
+        parseRow(line)
       })
       // remember the function to stop the request
       stopRequest = () => {
@@ -51,12 +54,58 @@ class StreamProcessor(parent: TimelineActor)
       }
       // go
       val req = url("https://userstream.twitter.com/1.1/user.json")
-      OauthHelper.http(req <@(OauthHelper.consumer, at) > handler)
+      OauthHelper.http(req <@(OauthHelper.consumer, at) > handler).either.map(_ match {
+        case Left(t) =>
+          logger.warn("API connection closed unexpectedly: " + t.getMessage)
+        case Right(_) =>
+          logger.debug("API connection closed")
+      })
     }
 
     case StopListening => {
       stopRequest()
       stopRequest = () => Unit
+    }
+  }
+
+  def parseRow(msg: String): Box[TwitterEvent] = {
+    implicit val formats = DefaultFormats
+    tryo {
+      // parse string into JSON representation
+      parse(msg)
+    } match {
+      case Full(json) => {
+        // check beforehand if a certain key is present to avoid too
+        //  many unnecessary extract[X] calls
+        def hasKey(j: JValue, key: String) = (j \ key) != JNothing
+
+        val parsedObj: Box[TwitterEvent] = json match {
+          case j if hasKey(j, "friends") =>
+            tryo(j.extract[FriendList])
+          case _ =>
+            Empty
+        }
+        // if we could extract an object, send to Comet Actor
+        parsedObj match {
+          case Full(obj) =>
+            parent ! obj
+          case Failure(msg, _, _) =>
+            logger.error("failed to extract class: " + msg)
+          case Empty =>
+            logger.warn("no handler for JSON: " + msg)
+        }
+        parsedObj
+      }
+
+      case f@Failure(msg, _, _) => {
+        logger.error("failed to parse (non-)JSON: " + msg)
+        f
+      }
+
+      case e@Empty => {
+        logger.warn("parsing string gave empty result: " + msg)
+        e
+      }
     }
   }
 }

@@ -3,11 +3,13 @@ package net.nablux.twtdb.comet
 import net.liftweb._
 import http._
 import net.liftweb.util.Helpers._
-import scala.xml.Text
+import scala.xml.{NodeSeq, Text}
 import net.nablux.twtdb.lib.{StopListening, StartListening, StreamProcessor, UserAccessToken}
-import net.liftweb.common.{Loggable, Full}
+import net.liftweb.common.{Empty, Box, Loggable, Full}
 import com.ning.http.client.oauth.RequestToken
 import net.liftweb.http.js.jquery.JqJsCmds.AppendHtml
+import net.nablux.twtdb.model.{TwitterEvent, FriendList}
+import net.liftweb.http.js.JsCmds.{Script, SetHtml}
 
 /**
  * Received from OauthHelper to show user has authenticated with Twitter.
@@ -20,16 +22,14 @@ case class Login(accessToken: RequestToken)
 case class Logout()
 
 /**
- * Contains all data from one row in the Twitter stream.
- */
-case class StreamRow(json: String)
-
-/**
  * Renders the entities extracted from the Twitter stream to the webpage.
  */
 class TimelineActor
   extends CometActor
   with Loggable {
+
+  // store some of the data received for display
+  var friendList: Box[FriendList] = Empty
 
   // actor that does the listening
   protected val processor = new StreamProcessor(this)
@@ -43,9 +43,11 @@ class TimelineActor
         case _ =>
           S.?("twtdb.please-login")
       }
-    }
+    } &
+      "#friendlist *" #> renderEvent(friendList)
   }
 
+  // handle some technical events with high priority
   override def highPriority: PartialFunction[Any, Unit] = {
     // when user logs in, tell the StreamProcessor to start the HTTP request
     case Login(token) => {
@@ -59,12 +61,36 @@ class TimelineActor
     }
   }
 
+  // handle rendering events with low priority
   override def lowPriority: PartialFunction[Any, Unit] = {
-    // when we receive a row from the stream, just display it
-    case StreamRow(json: String) => {
-      partialUpdate(AppendHtml("message",
-          <br /> ++ Text(now.toString + ": " + json)))
+    case te: TwitterEvent => {
+      te match {
+        case fl: FriendList => {
+          friendList = Full(fl)
+          partialUpdate(SetHtml("friendlist", renderEvent(fl)))
+        }
+      }
     }
+  }
+
+  // Generates HTML for event; separate function since we may need the HTML
+  // in both render() and lowPriority().
+  protected def renderEvent(te: TwitterEvent): NodeSeq = {
+    te match {
+      case fl: FriendList => {
+        val li = fl.friends.map(id => <li>
+          {id.toString}
+        </li>)
+        <ul>
+          {li.foldLeft(NodeSeq.Empty)(_ ++ _)}
+        </ul>
+      }
+    }
+  }
+
+  // Wrapper for renderEvent() on Boxes.
+  protected def renderEvent(bte: Box[TwitterEvent]): NodeSeq = {
+    bte.map(renderEvent(_)).getOrElse(NodeSeq.Empty)
   }
 
 }

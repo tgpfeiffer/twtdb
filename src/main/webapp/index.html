@@ -9,12 +9,20 @@
 
     <h2>Your Twitter Dashboard</h2>
 
-    <div data-lift="TwitterStream.reloadStreamBtn">
-
-    </div>
-
     <div data-lift="comet?type=TimelineActor">
-        <p id="message"></p>
+        <div class="row">
+            <div class="col-sm-9">
+                <h3>Timeline</h3>
+
+                <p id="message"></p>
+            </div>
+
+            <div class="col-sm-3">
+                <h3>Friends</h3>
+
+                <div id="friendlist"></div>
+            </div>
+        </div>
     </div>
 
 </div>
