@@ -17,8 +17,7 @@ class LoginForm extends Loggable {
 
         "#loginBtn" #> NodeSeq.Empty &
           "#logoutBtn" #> SHtml.onSubmitUnit(() => {
-            UserRequestToken.set(Empty)
-            UserAccessToken.set(Empty)
+            OauthHelper.destroyTokens
             S.seeOther(Site.oauthLogin.loc.calcDefaultHref)
           })
       }

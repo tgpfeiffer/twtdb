@@ -109,4 +109,10 @@ object OauthHelper
       RedirectResponse(Site.home.loc.calcDefaultHref)
     }
   }
+
+  /** Deletes the tokens and tells the TimelineActor to stop updating. */
+  def destroyTokens = {
+    UserRequestToken.set(Empty)
+    UserAccessToken.set(Empty)
+  }
 }
