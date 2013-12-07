@@ -20,10 +20,11 @@ case class TDirectMessage(created_at: Date,
                          sender: TFullUser,
                          entities: TEntities)
 
-case class Event(target: String,
-                 source: String,
+case class Event(target: TFullUser,
+                 source: TFullUser,
                  event: String,
                  //target_object: String,
+
                  created_at: Date) extends TwitterEvent
 
 case class TooManyFollowsWarning(warning: TooManyFollows) extends TwitterEvent

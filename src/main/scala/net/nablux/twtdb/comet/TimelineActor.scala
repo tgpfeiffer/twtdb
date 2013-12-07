@@ -80,7 +80,11 @@ class TimelineActor
           dm +=: events
           partialUpdate(PrependHtml("timeline", renderEvent(dm)))
         }
-        case _: Event | _: TooManyFollowsWarning | _: DeleteTweet => {}
+        case e: Event => {
+          e +=: events
+          partialUpdate(PrependHtml("timeline", renderEvent(e)))
+        }
+        case _: TooManyFollowsWarning | _: DeleteTweet => {}
       }
     }
   }
@@ -137,7 +141,31 @@ class TimelineActor
         }
         tmpl.map(transform).getOrElse(<p>error</p>)
       }
-      case _: Event | _: TooManyFollowsWarning | _: DeleteTweet =>
+
+      case e: Event => {
+        val tmpl = Templates("templates-hidden" :: "_event" :: Nil)
+        val transform = {
+          ".event-text *" #> e.event &
+            ".event-source" #> {
+              ".event-name *" #> e.source.name &
+                ".event-user-profile_image_url [src]" #> e.source.profile_image_url.
+                  replace("_normal.", "_mini.") &
+                ".event-screen_name *" #> ("@" + e.source.screen_name) &
+                ".event-screen_name [href]" #> ("https://twitter.com/" + e.source.screen_name)
+            } &
+            ".event-target" #> {
+              ".event-name *" #> e.target.name &
+                ".event-user-profile_image_url [src]" #> e.target.profile_image_url.
+                  replace("_normal.", "_mini.") &
+                ".event-screen_name *" #> ("@" + e.target.screen_name) &
+                ".event-screen_name [href]" #> ("https://twitter.com/" + e.target.screen_name)
+            } &
+            ".event-created_at *" #> e.created_at.toString
+        }
+        tmpl.map(transform).getOrElse(<p>error</p>)
+      }
+
+      case _: TooManyFollowsWarning | _: DeleteTweet =>
           <div/>
     }
   }

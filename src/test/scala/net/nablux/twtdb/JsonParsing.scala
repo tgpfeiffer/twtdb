@@ -32,14 +32,10 @@ class JsonParsing
   }
 
   it should "handle events correctly" in {
-    val s = """{
-              |  "target": "TARGET_USER",
-              |  "source": "SOURCE_USER",
-              |  "event":"EVENT_NAME",
-              |  "target_object": "TARGET_OBJECT",
-              |  "created_at": "Sat Sep 4 16:10:54 +0000 2010"
-              |}
-              | """.stripMargin
+    val s =
+      """{"event":"follow",
+        | "source":{"id":2233890072,"id_str":"2233890072","name":"Devbias","screen_name":"tgp_dev","location":null,"url":null,"description":null,"protected":false,"followers_count":2,"friends_count":14,"listed_count":0,"created_at":"Sat Dec 07 03:46:32 +0000 2013","favourites_count":0,"utc_offset":null,"time_zone":null,"geo_enabled":false,"verified":false,"statuses_count":0,"lang":"de","contributors_enabled":false,"is_translator":false,"profile_background_color":"C0DEED","profile_background_image_url":"http:\/\/abs.twimg.com\/images\/themes\/theme1\/bg.png","profile_background_image_url_https":"https:\/\/abs.twimg.com\/images\/themes\/theme1\/bg.png","profile_background_tile":false,"profile_image_url":"http:\/\/abs.twimg.com\/sticky\/default_profile_images\/default_profile_1_normal.png","profile_image_url_https":"https:\/\/abs.twimg.com\/sticky\/default_profile_images\/default_profile_1_normal.png","profile_link_color":"0084B4","profile_sidebar_border_color":"C0DEED","profile_sidebar_fill_color":"DDEEF6","profile_text_color":"333333","profile_use_background_image":true,"default_profile":true,"default_profile_image":true,"following":false,"follow_request_sent":false,"notifications":false},"target":{"id":255399435,"id_str":"255399435","name":"Justin bieber fan","screen_name":"Justienbebers","location":"All Arond The World","url":"http:\/\/t.co\/vli2Ts1cpN","description":"#MusicMondays is in effct Unlook #FimFridays -SO MUCH LOVE FOR THE FANS...you are always there for me and l will always be there for you MUCH LOVE. thanks","protected":false,"followers_count":4943,"friends_count":5444,"listed_count":5,"created_at":"Mon Feb 21 08:31:18 +0000 2011","favourites_count":134,"utc_offset":null,"time_zone":null,"geo_enabled":true,"verified":false,"statuses_count":9647,"lang":"ko","contributors_enabled":false,"is_translator":false,"profile_background_color":"642D8B","profile_background_image_url":"http:\/\/abs.twimg.com\/images\/themes\/theme10\/bg.gif","profile_background_image_url_https":"https:\/\/abs.twimg.com\/images\/themes\/theme10\/bg.gif","profile_background_tile":true,"profile_image_url":"http:\/\/pbs.twimg.com\/profile_images\/378800000839924833\/7b76a7cc3c1bbd50b0f013c7a26a2614_normal.jpeg","profile_image_url_https":"https:\/\/pbs.twimg.com\/profile_images\/378800000839924833\/7b76a7cc3c1bbd50b0f013c7a26a2614_normal.jpeg","profile_banner_url":"https:\/\/pbs.twimg.com\/profile_banners\/255399435\/1386391478","profile_link_color":"FF0000","profile_sidebar_border_color":"65B0DA","profile_sidebar_fill_color":"7AC3EE","profile_text_color":"3D1957","profile_use_background_image":true,"default_profile":false,"default_profile_image":false,"following":false,"follow_request_sent":false,"notifications":false},
+        | "created_at":"Sat Dec 07 15:31:42 +0000 2013"}""".stripMargin
     val parsed = processor.parseRow(s)
     parsed should not be empty
     parsed.get shouldBe a[Event]

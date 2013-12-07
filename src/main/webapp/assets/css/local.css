@@ -1,13 +1,16 @@
 .tweet .tweet-meta .tweet-created_at,
-.dm .dm-meta .dm-created_at {
+.dm .dm-meta .dm-created_at,
+.event .event-meta .event-created_at {
     display: block;
     float: right;
 }
 .tweet .tweet-meta img.tweet-user-profile_image_url,
-.dm .dm-meta img.dm-user-profile_image_url {
+.dm .dm-meta img.dm-user-profile_image_url,
+.event .event-meta img.event-user-profile_image_url {
     margin-right: .5em;
 }
-.dm .dm-meta span.glyphicon {
+.dm .dm-meta span.glyphicon,
+.event .event-meta span.glyphicon {
     margin-left: .5em;
     margin-right: .5em;
 }
