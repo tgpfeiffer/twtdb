@@ -6,7 +6,7 @@ import net.liftweb.util.Helpers._
 import net.nablux.twtdb.lib._
 
 class TwitterStream extends Loggable {
-  
+
   def homeTimeline = {
     "#timeline" #> (TwitterApi.homeTimeline match {
       case Right(s) =>
