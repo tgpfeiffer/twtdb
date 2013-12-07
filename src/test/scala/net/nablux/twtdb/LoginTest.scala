@@ -42,7 +42,7 @@ class LoginTest extends LiftSetup {
     find(id("logoutBtn")).isDefined should be(true)
     click on id("logoutBtn")
     // we should stay on login page
-    pageTitle should be("App: Log In")
+    pageTitle should be("App: Log In/Log Out")
     // check for login/logout button
     find(id("loginBtn")).isDefined should be(true)
     find(id("logoutBtn")).isDefined should be(false)

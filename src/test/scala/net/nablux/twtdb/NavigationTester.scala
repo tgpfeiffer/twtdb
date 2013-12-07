@@ -9,6 +9,6 @@ class NavigationTester extends LiftSetup {
     // click "Log In" link in the menu
     click on XPathQuery( """//*[@id='lmenu']/a[2]""")
 
-    pageTitle should be("App: Log In")
+    pageTitle should be("App: Log In/Log Out")
   }
 }
