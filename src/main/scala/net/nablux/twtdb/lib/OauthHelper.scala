@@ -9,6 +9,7 @@ import net.liftweb.util.Props
 import net.liftweb.http._
 import net.liftweb.http.rest._
 import bootstrap.liftweb.Site
+import net.nablux.twtdb.comet.{Logout, Login}
 
 object UserRequestToken extends SessionVar[Box[RequestToken]](Empty)
 
@@ -83,6 +84,13 @@ object OauthHelper
               // store in session var and go to front page
               logger.info("got access token: " + at)
               UserAccessToken.set(Full(at))
+              // we now send this access token to the TimelineActor so that
+              //  it can trigger fetching the stream
+              for (session <- S.session) {
+                session.sendCometActorMessage("TimelineActor",
+                  Empty,
+                  Login(at))
+              }
               S.notice(S.?("twtdb.login-success"))
               RedirectResponse(Site.home.loc.calcDefaultHref)
 
@@ -114,5 +122,12 @@ object OauthHelper
   def destroyTokens = {
     UserRequestToken.set(Empty)
     UserAccessToken.set(Empty)
+    // we now tell TimelineActor that the user logged out so that
+    //  it can stop fetching further information
+    for (session <- S.session) {
+      session.sendCometActorMessage("TimelineActor",
+        Empty,
+        Logout)
+    }
   }
 }
