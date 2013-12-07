@@ -11,7 +11,14 @@ sealed trait TwitterEvent
 
 case class FriendList(friends: List[Long]) extends TwitterEvent
 
-// TODO: Direct Messages
+case class DirectMessage(direct_message: TDirectMessage) extends TwitterEvent
+
+case class TDirectMessage(created_at: Date,
+                         id: Long,
+                         text: String,
+                         recipient: TFullUser,
+                         sender: TFullUser,
+                         entities: TEntities)
 
 case class Event(target: String,
                  source: String,

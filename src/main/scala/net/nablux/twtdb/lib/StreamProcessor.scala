@@ -122,6 +122,8 @@ class StreamProcessor(parent: LiftActor)
             tryo(j.extract[TooManyFollowsWarning])
           case j if hasKey(j, "text") && !hasKey(j, "sender") =>
             tryo(j.extract[Tweet])
+          case j if hasKey(j, "direct_message") =>
+            tryo(j.extract[DirectMessage])
           case j if hasKey(j, "delete") =>
             tryo(j.extract[DeleteTweet])
           case _ =>
