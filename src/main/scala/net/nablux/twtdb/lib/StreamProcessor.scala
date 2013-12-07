@@ -30,6 +30,12 @@ class StreamProcessor(parent: LiftActor)
   extends LiftActor
   with Loggable {
 
+  object FormatsWithTwitterDate extends DefaultFormats {
+    override protected val dateFormatter = new SimpleDateFormat("EEE MMM d HH:mm:ss Z yyyy", Locale.US)
+  }
+
+  implicit val formats = FormatsWithTwitterDate
+
   // we keep a copy of the token here
   protected var token: Box[RequestToken] = Empty
 
@@ -39,10 +45,38 @@ class StreamProcessor(parent: LiftActor)
 
   protected def messageHandler = {
     case StartListening(at) => {
+      token = Full(at)
       // stop a running request, just in case
       stopRequest()
-      logger.info("connecting to Twitter Stream API: " + at)
-      token = Full(at)
+      logger.info("connecting to Twitter REST API")
+
+      // first, get a list of tweets from the normal REST API
+      val restReq = url("https://api.twitter.com/1.1/statuses/home_timeline.json")
+      OauthHelper.http(restReq <@(OauthHelper.consumer, at) OK as.String).
+        either.map(_ match {
+        // if we got a string, parse it and try to get tweets out
+        case Right(s) => {
+          tryo {
+            parse(s).extract[List[Tweet]]
+          } match {
+            case Full(list) => {
+              logger.debug("got " + list.length + " initial tweets")
+              list.map(parent ! _)
+            }
+            case Failure(msg, _, _) =>
+              logger.error("failed to extract list of tweets: " + msg +
+                " from \n" + s)
+            case Empty =>
+              logger.warn("JSON contained no tweets: " + s)
+          }
+        }
+        // otherwise, log the error
+        case Left(t) =>
+          logger.error("failed to get initial tweets: " + t.getMessage)
+      })
+
+      // now, connect to the streaming API
+      logger.info("connecting to Twitter Stream API")
       // the handler deals with rows in the stream
       val handler = as.stream.Lines(line => {
         parseRow(line)
@@ -53,8 +87,9 @@ class StreamProcessor(parent: LiftActor)
         handler.stop()
       }
       // go
-      val req = url("https://userstream.twitter.com/1.1/user.json")
-      OauthHelper.http(req <@(OauthHelper.consumer, at) > handler).either.map(_ match {
+      val streamReq = url("https://userstream.twitter.com/1.1/user.json")
+      OauthHelper.http(streamReq <@(OauthHelper.consumer, at) > handler).
+        either.map(_ match {
         case Left(t) =>
           logger.warn("API connection closed unexpectedly: " + t.getMessage)
         case Right(_) =>
@@ -68,13 +103,7 @@ class StreamProcessor(parent: LiftActor)
     }
   }
 
-  object FormatsWithTwitterDate extends DefaultFormats {
-    override protected val dateFormatter = new SimpleDateFormat("EEE MMM d HH:mm:ss Z yyyy", Locale.US)
-  }
-
   def parseRow(msg: String): Box[TwitterEvent] = {
-    implicit val formats = FormatsWithTwitterDate
-
     tryo {
       // parse string into JSON representation
       parse(msg)
@@ -101,6 +130,7 @@ class StreamProcessor(parent: LiftActor)
         // if we could extract an object, send to Comet Actor
         parsedObj match {
           case Full(obj) =>
+            logger.debug("received " + obj)
             parent ! obj
           case Failure(msg, _, _) =>
             logger.error("failed to extract class: " + msg)
