@@ -1,15 +1,13 @@
 package net.nablux.twtdb.comet
 
-import net.liftweb._
-import http._
-import net.liftweb.util.Helpers._
-import scala.xml.{NodeSeq, Text}
-import net.nablux.twtdb.lib.{StopListening, StartListening, StreamProcessor, UserAccessToken}
+import scala.xml.NodeSeq
+import net.liftweb.http._
 import net.liftweb.common.{Empty, Box, Loggable, Full}
-import com.ning.http.client.oauth.RequestToken
+import net.liftweb.http.js.JsCmds.SetHtml
 import net.liftweb.http.js.jquery.JqJsCmds.AppendHtml
-import net.nablux.twtdb.model.{TwitterEvent, FriendList}
-import net.liftweb.http.js.JsCmds.{Script, SetHtml}
+import com.ning.http.client.oauth.RequestToken
+import net.nablux.twtdb.lib.{StopListening, StartListening, StreamProcessor, UserAccessToken}
+import net.nablux.twtdb.model._
 
 /**
  * Received from OauthHelper to show user has authenticated with Twitter.
@@ -69,6 +67,10 @@ class TimelineActor
           friendList = Full(fl)
           partialUpdate(SetHtml("friendlist", renderEvent(fl)))
         }
+        case t: Tweet => {
+          partialUpdate(AppendHtml("message", renderEvent(t)))
+        }
+        case _: Event | _: TooManyFollowsWarning | _: DeleteTweet => {}
       }
     }
   }
@@ -85,6 +87,16 @@ class TimelineActor
           {li.foldLeft(NodeSeq.Empty)(_ ++ _)}
         </ul>
       }
+      case t: Tweet => {
+        <div>
+          <p>
+            {t.text}
+          </p>
+          <small>from {t.user.name} (@{t.user.screen_name})</small>
+        </div> ++ <hr />
+      }
+      case _: Event | _: TooManyFollowsWarning | _: DeleteTweet =>
+          <div/>
     }
   }
 
