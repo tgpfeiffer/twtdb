@@ -36,19 +36,20 @@ case class TooManyFollows(code: String,
 // <https://dev.twitter.com/docs/platform-objects/tweets>
 
 case class Tweet(created_at: Date,
-                  id: Long,
-                  text: String,
-                  source: String,
-                  truncated: Boolean,
-                  user: TFullUser,
-                  retweet_count: Int,
-                  entities: TEntities) extends TwitterEvent
+                 id: Long,
+                 text: String,
+                 source: String,
+                 truncated: Boolean,
+                 user: TFullUser,
+                 retweet_count: Int,
+                 entities: TEntities) extends TwitterEvent
 
 trait TUser
 
 case class TFullUser(id: Long,
                      name: String,
-                     screen_name: String) extends TUser
+                     screen_name: String,
+                     profile_image_url: String) extends TUser
 
 case class TMentionUser(id: Long,
                         name: String,

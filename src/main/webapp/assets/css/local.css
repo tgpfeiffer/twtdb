@@ -1,0 +1,13 @@
+.tweet .tweet-meta .tweet-created_at,
+.dm .dm-meta .dm-created_at {
+    display: block;
+    float: right;
+}
+.tweet .tweet-meta img.tweet-user-profile_image_url,
+.dm .dm-meta img.dm-user-profile_image_url {
+    margin-right: .5em;
+}
+.dm .dm-meta span.glyphicon {
+    margin-left: .5em;
+    margin-right: .5em;
+}

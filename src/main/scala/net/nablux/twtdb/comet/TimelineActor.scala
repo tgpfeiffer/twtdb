@@ -1,13 +1,15 @@
 package net.nablux.twtdb.comet
 
-import scala.xml.NodeSeq
+import scala.xml.{NodeSeq, Text}
 import net.liftweb.http._
 import net.liftweb.common.{Empty, Box, Loggable, Full}
 import net.liftweb.http.js.JsCmds.SetHtml
 import net.liftweb.http.js.jquery.JqJsCmds.AppendHtml
+import net.liftweb.util.Helpers._
 import com.ning.http.client.oauth.RequestToken
 import net.nablux.twtdb.lib.{StopListening, StartListening, StreamProcessor, UserAccessToken}
 import net.nablux.twtdb.model._
+import scala.collection.mutable.MutableList
 
 /**
  * Received from OauthHelper to show user has authenticated with Twitter.
@@ -28,18 +30,21 @@ class TimelineActor
 
   // store some of the data received for display
   var friendList: Box[FriendList] = Empty
+  val events: MutableList[TwitterEvent] = MutableList()
 
   // actor that does the listening
   protected val processor = new StreamProcessor(this)
 
+  UserAccessToken.get.map(this ! Login(_))
+
   // message that is rendered when first displayed
   def render = {
-    "#message *" #> {
+    "#timeline *" #> {
       UserAccessToken.get match {
         case Full(at) =>
-          S.?("twtdb.retrieving-tweets")
+          events.map(renderEvent(_)).foldLeft(NodeSeq.Empty)(_ ++ _)
         case _ =>
-          S.?("twtdb.please-login")
+          Text(S.?("twtdb.please-login"))
       }
     } &
       "#friendlist *" #> renderEvent(friendList)
@@ -68,7 +73,12 @@ class TimelineActor
           partialUpdate(SetHtml("friendlist", renderEvent(fl)))
         }
         case t: Tweet => {
-          partialUpdate(AppendHtml("message", renderEvent(t)))
+          events += t
+          partialUpdate(AppendHtml("timeline", renderEvent(t)))
+        }
+        case dm: DirectMessage => {
+          events += dm
+          partialUpdate(AppendHtml("timeline", renderEvent(dm)))
         }
         case _: Event | _: TooManyFollowsWarning | _: DeleteTweet => {}
       }
@@ -87,13 +97,45 @@ class TimelineActor
           {li.foldLeft(NodeSeq.Empty)(_ ++ _)}
         </ul>
       }
+
       case t: Tweet => {
-        <div>
-          <p>
-            {t.text}
-          </p>
-          <small>from {t.user.name} (@{t.user.screen_name})</small>
-        </div> ++ <hr />
+        val tmpl = Templates("templates-hidden" :: "_tweet" :: Nil)
+        val transform = {
+          ".tweet [id]" #> ("item-" + t.id) &
+            ".tweet-text *" #> t.text &
+            ".tweet-name *" #> t.user.name &
+            ".tweet-user-profile_image_url [src]" #> t.user.profile_image_url.
+              replace("_normal.", "_mini.") &
+            ".tweet-screen_name *" #> ("@" + t.user.screen_name) &
+            ".tweet-screen_name [href]" #> ("https://twitter.com/" + t.user.screen_name) &
+            ".tweet-created_at *" #> t.created_at.toString
+        }
+        tmpl.map(transform).getOrElse(<p>error</p>)
+      }
+
+      case dm: DirectMessage => {
+        val tmpl = Templates("templates-hidden" :: "_dm" :: Nil)
+        val d = dm.direct_message
+        val transform = {
+          ".dm [id]" #> ("item-" + d.id) &
+            ".dm-text *" #> d.text &
+            ".dm-sender" #> {
+              ".dm-name *" #> d.sender.name &
+                ".dm-user-profile_image_url [src]" #> d.sender.profile_image_url.
+                  replace("_normal.", "_mini.") &
+                ".dm-screen_name *" #> ("@" + d.sender.screen_name) &
+                ".dm-screen_name [href]" #> ("https://twitter.com/" + d.sender.screen_name)
+            } &
+            ".dm-recipient" #> {
+              ".dm-name *" #> d.recipient.name &
+                ".dm-user-profile_image_url [src]" #> d.recipient.profile_image_url.
+                  replace("_normal.", "_mini.") &
+                ".dm-screen_name *" #> ("@" + d.recipient.screen_name) &
+                ".dm-screen_name [href]" #> ("https://twitter.com/" + d.recipient.screen_name)
+            } &
+            ".dm-created_at *" #> d.created_at.toString
+        }
+        tmpl.map(transform).getOrElse(<p>error</p>)
       }
       case _: Event | _: TooManyFollowsWarning | _: DeleteTweet =>
           <div/>
