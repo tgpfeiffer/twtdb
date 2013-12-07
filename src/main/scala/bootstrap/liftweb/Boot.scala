@@ -8,7 +8,6 @@ import common._
 import http._
 import sitemap._
 import Loc._
-import mapper._
 
 import net.nablux.twtdb.lib._
 import net.nablux.twtdb.model._
@@ -23,30 +22,11 @@ import scala.xml.Text
  */
 class Boot {
   def boot {
-    if (!DB.jndiJdbcConnAvailable_?) {
-      val vendor =
-        new StandardDBVendor(Props.get("db.driver") openOr "org.h2.Driver",
-          Props.get("db.url") openOr
-            "jdbc:h2:lift_proto.db;AUTO_SERVER=TRUE",
-          Props.get("db.user"), Props.get("db.password"))
-
-      LiftRules.unloadHooks.append(vendor.closeAllConnections_! _)
-
-      DB.defineConnectionManager(DefaultConnectionIdentifier, vendor)
-    }
-
-    // Use Lift's Mapper ORM to populate the database
-    // you don't need to use Mapper to use Lift... use
-    // any ORM you want
-    Schemifier.schemify(true, Schemifier.infoF _, User)
-
     // where to search snippet
     LiftRules.addToPackages("net.nablux.twtdb")
 
-
-    def sitemapMutators = User.sitemapMutator
-    //The SiteMap is built in the Site object bellow 
-    LiftRules.setSiteMapFunc(() => sitemapMutators(Site.sitemap))
+    //The SiteMap is built in the Site object below
+    LiftRules.setSiteMapFunc(() => Site.sitemap)
 
     //Init the FoBo - Front-End Toolkit module, 
     //see http://liftweb.net/lift_modules for more info
@@ -66,7 +46,7 @@ class Boot {
     LiftRules.early.append(_.setCharacterEncoding("UTF-8"))
 
     // What is the function to test if a user is logged in?
-    LiftRules.loggedInTest = Full(() => User.loggedIn_?)
+    LiftRules.loggedInTest = Empty
 
     // Use HTML5 for rendering
     LiftRules.htmlProperties.default.set((r: Req) =>
@@ -79,9 +59,6 @@ class Boot {
       }
     }
     )
-
-    // Make a transaction span the whole HTTP request
-    S.addAround(DB.buildLoanWrapper)
   }
 
   // OAuth callback
@@ -94,7 +71,6 @@ object Site {
   val home = Menu.i("Home") / "index"
   val oauthLogin = Menu("OauthLogin", S.loc("fobo.menu.loc.login", scala.xml.Text(S.?("login"))) ++ Text("/") ++
     S.loc("fobo.menu.loc.logout", scala.xml.Text(S.?("login")))) / "oauth_login"
-  val userMenu = User.AddUserMenusHere
   val static = Menu(Loc("Static", Link(List("static"), true, "/static/index"), S.loc("StaticContent", scala.xml.Text("Static Content")), Hidden))
   val twbs = Menu(Loc("Bootstrap3", Link(List("bootstrap301"), true, "/bootstrap301/index"), S.loc("Bootstrap3", scala.xml.Text("Bootstrap3")), LocGroup("lg2")))
 
@@ -104,7 +80,7 @@ object Site {
     static,
     twbs,
     ddLabel1 >> LocGroup("topRight") >> PlaceHolder submenus (
-      divider1 >> FoBo.TBLocInfo.Divider >> userMenu
+      divider1 >> FoBo.TBLocInfo.Divider
       )
   )
 }
