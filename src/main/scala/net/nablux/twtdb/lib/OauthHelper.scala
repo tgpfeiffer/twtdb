@@ -34,7 +34,7 @@ object OauthHelper
     Props.get("twitter.apisecret") openOr "")
 
   // implements SomeCallback
-  override def callback: String = "http://127.0.0.1:8083/oauth/callback"
+  override def callback: String = S.hostAndPath + "/oauth/callback"
 
   // implements SomeEndpoints
   val twitterBase = "https://api.twitter.com"
